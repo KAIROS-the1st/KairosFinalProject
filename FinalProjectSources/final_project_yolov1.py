@@ -10,9 +10,9 @@
 import cv2
 from ultralytics import YOLO
 
-class_names = ["white cane", "open", "close", "person"]
+class_names = ["close", "open", "white cane"]
 
-model = YOLO(r"runs\detect\train17\weights\best.pt")
+model = YOLO(r"runs\detect\train2\weights\best.pt")
 
 cap = cv2.VideoCapture(0)
 
@@ -30,25 +30,28 @@ while True:
             lx, ly, rx, ry = box.xyxy[0]
             lx, ly, rx, ry = int(lx), int(ly), int(rx), int(ry)
             
-            # 바운딩 박스 그리기
-            if class_name == "white cane":
-                cv2.rectangle(frame, (lx, ly), (rx, ry), (0,255,255), 3)
-            elif class_name == "open":
-                cv2.rectangle(frame, (lx, ly), (rx, ry), (255,255,0), 3)
-            elif class_name == "close":
-                cv2.rectangle(frame, (lx, ly), (rx, ry), (255,0,255), 3)
-            elif class_name == "person":
-                cv2.rectangle(frame, (lx, ly), (rx, ry), (255,255,255), 3)
-            
-            # 객체의 중심점 계산 및 표시
-            center_x = (lx + rx) // 2
-            center_y = (ly + ry) // 2
-            cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
-
-            # 신뢰도와 클래스 이름 표시
+            # 신뢰도로 한번 거름
             conf = round(float(box.conf[0]), 2)
-            cv2.putText(frame, str(conf), (lx, ly), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            cv2.putText(frame, str(class_name), (center_x, center_y-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            if conf >= 0.6:
+                # 바운딩 박스 그리기
+                if class_name == "white cane":
+                    cv2.rectangle(frame, (lx, ly), (rx, ry), (0,255,255), 3)
+                if class_name == "open":
+                    cv2.rectangle(frame, (lx, ly), (rx, ry), (255,255,0), 3)
+                if class_name == "close":
+                    cv2.rectangle(frame, (lx, ly), (rx, ry), (255,0,255), 3)
+                if class_name == "person":
+                    cv2.rectangle(frame, (lx, ly), (rx, ry), (255,255,255), 3)
+                
+                # 객체의 중심점 계산 및 표시
+                center_x = (lx + rx) // 2
+                center_y = (ly + ry) // 2
+                cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
+                # print(center_x, center_y)
+
+                # 신뢰도와 클래스 이름 표시
+                cv2.putText(frame, str(conf), (center_x, center_y+25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                cv2.putText(frame, str(class_name), (center_x, center_y-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     
     # 표시된 프레임 출력
     cv2.imshow("YOLO", frame)
