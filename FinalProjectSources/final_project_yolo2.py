@@ -1,9 +1,9 @@
 import cv2
 from ultralytics import YOLO
 
-class_names = ["white cane", "open", "close", "person"]
+class_names = ["close", "open", "white cane", "person"]
 
-model = YOLO(r"runs\detect\train17\weights\best.pt")
+model = YOLO(r"runs\detect\train2\weights\best.pt")
 
 cap = cv2.VideoCapture(0)
 
@@ -49,11 +49,11 @@ while True:
             center_x = (lx + rx) // 2
             center_y = (ly + ry) // 2
             cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
-            print(center_x, center_y)
+            # print(center_x, center_y)
 
             # 신뢰도와 클래스 이름 표시
             conf = round(float(box.conf[0]), 2)
-            cv2.putText(frame, str(conf), (lx, ly), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(frame, str(conf), (center_x, center_y+25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             cv2.putText(frame, str(class_name), (center_x, center_y-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     
     # 표시된 프레임 출력
