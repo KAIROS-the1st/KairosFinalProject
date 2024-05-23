@@ -3,7 +3,7 @@ import numpy as np
 
 app = Flask(__name__)
 
-@app.route('/upload', methods=['POST'])
+@app.route('protocol', methods=['POST'])
 def upload_file():
     # JSON 데이터 받기
     data = request.get_json()
@@ -17,5 +17,5 @@ def upload_file():
     return 'I received successfully'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='ip', port="port")
 

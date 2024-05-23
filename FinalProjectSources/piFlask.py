@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # 예시 API 엔드포인트
-@app.route('/send_message', methods=['POST'])
+@app.route('PROTOCOL', methods=['POST'])
 
 def send_message():
     data = request.get_json()
@@ -16,4 +16,4 @@ def send_message():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)  # Flask 서버 실행
+    app.run(host='HOST_IP', port="PORT")  # Flask 서버 실행

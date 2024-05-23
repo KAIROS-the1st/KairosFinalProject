@@ -42,8 +42,8 @@ class FlaskPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
     flask_node = FlaskPublisher()
-    app.add_url_rule('/upload', 'upload_file', flask_node.upload_file_wrapper, methods=['POST'])
-    app.run(host='0.0.0.0', port=5000)
+    app.add_url_rule('protocol', 'upload_file', flask_node.upload_file_wrapper, methods=['POST'])
+    app.run(host='ip', port="port")
     rclpy.spin(flask_node)
     flask_node.destroy_node()
     rclpy.shutdown()

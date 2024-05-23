@@ -1,0 +1,22 @@
+# final_project_yolo3.py
+url = 'http://172.20.179.107:5000/upload'
+
+# final_project_yolo4.py
+robotarm_url = 'http://172.20.179.107:5000/upload'
+agv_url = 'http://172.30.1.89:5000/upload'
+
+# final_project_agv.py
+@app.route('/upload', methods=['POST'])
+app.run(host='0.0.0.0', port=5000)
+
+# piFlask.py
+@app.route('/send_message', methods=['POST'])
+app.run(host='0.0.0.0', port=5000)
+
+# medium.py
+app.add_url_rule('/upload', 'upload_file', flask_node.upload_file_wrapper, methods=['POST'])
+app.run(host='0.0.0.0', port=5000)
+
+# pre_medium.py
+@app.route('/upload', methods=['POST'])
+app.run(host='0.0.0.0', port=5000)

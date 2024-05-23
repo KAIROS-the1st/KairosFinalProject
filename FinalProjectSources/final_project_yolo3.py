@@ -14,7 +14,7 @@ model = YOLO(r"runs\detect\train2\weights\best.pt")
 cap = cv2.VideoCapture(0)
 
 # 서버 URL
-url = 'http://172.20.179.107:5000/upload'
+url = 'URL/PROTOCOL'
 
 while True:
     ret, frame = cap.read()
