@@ -14,6 +14,8 @@ class TopicCheck(Node):
         self.subscription = self.create_subscription(Float32MultiArray, 'order', self.listener_callback, 10)
         self.subscription
 
+        self.i = 20
+
     def listener_callback(self, odr):
         height, center_x = odr.data
         self.get_logger().info('What I Received >> height: %d, center_x: %d' % (height, center_x))
@@ -21,12 +23,14 @@ class TopicCheck(Node):
         partition = height // 3
         if partition > center_x: # right side
             self.get_logger().info("Adjusting1")
-            mc.send_angles([0,0,0,0,20,0],50)
+            mc.send_angles([0,0,0,0,self.i,0],50)
             time.sleep(1)
+            self.i += 5
         elif partition * 2 < center_x: # left side
             self.get_logger().info("Adjusting2")
-            mc.send_angles([0,0,0,0,-20,0],50)
+            mc.send_angles([0,0,0,0,-self.i,0],50)
             time.sleep(1) 
+            self.i -= 5
         else:
             self.get_logger().info("I grab")
             mc.init_eletric_gripper()

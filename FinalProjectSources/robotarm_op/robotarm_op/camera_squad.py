@@ -12,14 +12,21 @@ class CameraNode(Node):
         self.bridge = CvBridge()
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(0.1, self.timer_callback)
+        self.frame_count = 0
 
     def timer_callback(self):
         ret, frame = self.cap.read()
+        self.frame_count += 1
+
         if ret:
-            msg = self.bridge.cv2_to_imgmsg(frame, 'bgr8')
-            self.publisher_.publish(msg)
-            # cv2.imshow('Camera', frame)
-            # cv2.waitKey(1)  # Needed to display the image correctly
+            if self.frame_count%30 == 0:
+                msg = self.bridge.cv2_to_imgmsg(frame, 'bgr8')
+                self.publisher_.publish(msg)
+            else:
+                pass
+                # cv2.imshow('Camera', frame)
+                # cv2.waitKey(1)  # Needed to display the image correctly
+        
 
 def main(args=None):
     rclpy.init(args=args)
