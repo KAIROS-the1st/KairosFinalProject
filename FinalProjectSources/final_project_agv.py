@@ -1,4 +1,4 @@
-# AGV server and code for detecting one line
+# AGV server communication
 
 
 from flask import Flask, request, jsonify

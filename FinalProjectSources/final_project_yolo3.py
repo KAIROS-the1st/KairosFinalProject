@@ -1,4 +1,4 @@
-# To Linux, this
+# To Linux, now discard
 # Object detection send data
 
 
