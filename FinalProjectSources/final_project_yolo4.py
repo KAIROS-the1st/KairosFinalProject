@@ -1,4 +1,7 @@
 # final_project_yolo3.py revision
+# now discard
+
+
 import cv2
 from ultralytics import YOLO
 import requests
