@@ -17,22 +17,19 @@ class RobotControl(Node):
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
-        self.i = 20
+        self.i = 0
 
     def listener_callback(self, msg):
         if msg.data == "right":
             self.get_logger().info('What I Received: "%s"' % msg.data)
-            mc.send_angles([0,0,0,0,self.i,0],50)
-            time.sleep(1)
-            self.i += 1
+            mc.send_angles([0,0,0,0,self.i,0],30)
+            self.i += 5
         elif msg.data == "left":
             self.get_logger().info('What I Received: "%s"' % msg.data)
-            mc.send_angles([0,0,0,0,-self.i,0],50)
-            time.sleep(1)
-            self.i -= 1
+            mc.send_angles([0,0,0,0,self.i,0],30)
+            self.i -= 5
         elif msg.data == "middle":
             self.get_logger().info('What I Received: "%s"' % msg.data)
-            time.sleep(1)
         else:
             self.get_logger().info('I Received None: "%s"' % msg.data)
         
@@ -41,7 +38,7 @@ class RobotControl(Node):
             mc.init_eletric_gripper()
             mc.set_eletric_gripper(1)
             mc.set_gripper_value(10, 30)
-            time.sleep(10)
+            time.sleep(20)
             self.get_logger().info("I release")
             mc.init_eletric_gripper()
             mc.set_eletric_gripper(0)
