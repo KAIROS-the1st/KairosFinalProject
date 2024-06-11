@@ -1,6 +1,4 @@
-# for test without app
-
-
+# for test
 import cv2
 from ultralytics import YOLO
 import requests
@@ -15,66 +13,46 @@ cap = cv2.VideoCapture(0)
 
 # 서버 URL
 robotarm_url = 'http://172.20.179.107:5000/upload'
-agv_url = 'http://172.30.1.89:5000/upload'
+agv_url = 'http://172.30.1.50:5000/agv_com'
 
 # 메시지 전송 주기 설정 (초)
 send_interval = 0.5
 last_send_time = time.time()
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+def send_to_server(url, payload):
+    response = requests.post(url, json=payload)
+    print(f'Server response from {url}:', response.text)
 
-    height, width, _ = frame.shape
-    center_x = 0  # center_x 변수 초기화
-    order_ = ""
-    className = ""
-    
+def detect_largest_object(frame):
     largest_box = None
     largest_area = 0
-
     result = model(frame, stream=True)
-    
+
     for r in result:
-        boxes = r.boxes
-        for box in boxes:
+        for box in r.boxes:
             cls = box.cls[0]
-            class_name = class_names[int(cls)]  # 클래스 번호에 해당하는 클래스 이름 가져오기
-            
-            # 객체의 바운딩 박스 좌표 추출
-            lx, ly, rx, ry = box.xyxy[0]
-            lx, ly, rx, ry = int(lx), int(ly), int(rx), int(ry)
-            
-            # 신뢰도로 필터링
+            class_name = class_names[int(cls)]
+
+            lx, ly, rx, ry = map(int, box.xyxy[0])
             conf = round(float(box.conf[0]), 2)
+
             if conf >= 0.6:
-                # 객체의 면적 계산
                 area = (rx - lx) * (ry - ly)
-                
-                # 가장 큰 객체 선택
                 if area > largest_area:
                     largest_area = area
-                    largest_box = box
+                    largest_box = (box, class_name, lx, ly, rx, ry)
+
+    return largest_box
+
+def process_frame(frame):
+    largest_box = detect_largest_object(frame)
 
     if largest_box:
-        cls = largest_box.cls[0]
-        class_name = class_names[int(cls)]
-
-        # 객체의 바운딩 박스 좌표 추출
-        lx, ly, rx, ry = largest_box.xyxy[0]
-        lx, ly, rx, ry = int(lx), int(ly), int(rx), int(ry)
+        box, class_name, lx, ly, rx, ry = largest_box
 
         # 바운딩 박스 그리기
-        if class_name == "white cane":
-            cv2.rectangle(frame, (lx, ly), (rx, ry), (0, 255, 255), 3)
-            order_ = "go"; className = "go"
-        elif class_name == "open":
-            cv2.rectangle(frame, (lx, ly), (rx, ry), (255, 255, 0), 3)
-            order_ = "go"; className = "open"
-        elif class_name == "close":
-            cv2.rectangle(frame, (lx, ly), (rx, ry), (255, 0, 255), 3)
-            order_ = "stop"; className = "close"
+        color = (0, 255, 255) if class_name == "white cane" else (255, 255, 0) if class_name == "open" else (255, 0, 255)
+        cv2.rectangle(frame, (lx, ly), (rx, ry), color, 3)
 
         # 객체의 중심점 계산 및 표시
         center_x = (lx + rx) // 2
@@ -82,38 +60,56 @@ while True:
         cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
 
         # 신뢰도와 클래스 이름 표시
-        conf = round(float(largest_box.conf[0]), 2)
+        conf = round(float(box.conf[0]), 2)
         cv2.putText(frame, str(conf), (center_x, center_y + 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        cv2.putText(frame, str(class_name), (center_x, center_y - 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    
+        cv2.putText(frame, class_name, (center_x, center_y - 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        return frame, class_name, center_x
+    return frame, None, 0
+
+def detect_qr_code(frame):
+    qr = cv2.QRCodeDetector()
+    data, box, _ = qr.detectAndDecode(frame)
+
+    if data:
+        lefttop = int(box[0][0][0]), int(box[0][0][1])
+        rightbottom = int(box[0][2][0]), int(box[0][2][1])
+        cv2.rectangle(frame, lefttop, rightbottom, (0, 0, 255), 5)
+
+    return frame, data
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame, class_name, center_x = process_frame(frame)
+
     current_time = time.time()
     if current_time - last_send_time >= send_interval:
-        # 데이터를 JSON 형식으로 서버에 전송 -- Robotarm
-        payload = {
-            'width': width,
-            'center_x': center_x,
-        }
-        # 데이터를 JSON 형식으로 서버에 전송 -- AGV
-        payload2 = {
-            'order_': order_,
-            'class_name': className,
-        }
         
-        # Robotarm 서버로 데이터 전송
-        robotarm_response = requests.post(robotarm_url, json=payload)
-        print('Robotarm server response:', robotarm_response.text)
-        
-        # # AGV 서버로 데이터 전송
-        # agv_response = requests.post(agv_url, json=payload2)
-        # print('AGV server response:', agv_response.text)
+        # response = {'order_': "open"}
+        # send_to_server(agv_url, response)
+    
+        frame, qr_data = detect_qr_code(frame)  # QR 코드를 검출하고 데이터를 얻음
+        if qr_data:
+            payload = {'qr_data': qr_data}
+            send_to_server(robotarm_url, payload)
+            last_send_time = current_time  # QR 코드를 감지한 경우 메시지를 전송하고 마지막 전송 시간 갱신
+        elif class_name == "white cane":
+            payload = {'width': frame.shape[1], 'center_x': center_x}
+            send_to_server(robotarm_url, payload)
+            payload2 = {'order_': "close"}
+            send_to_server(agv_url, payload2)
+        elif class_name in ["open", "close"]:
+            payload = {'order_': "go" if class_name == "open" else "stop"}
+            send_to_server(agv_url, payload)
         
         last_send_time = current_time  # 마지막 전송 시간 갱신
 
-    # 표시된 프레임 출력
-    cv2.imshow("YOLO", frame)
+    cv2.imshow("YOLO & QR Code Detection", frame)
 
-    # 'q' 키를 누르면 종료
-    if cv2.waitKey(10) & 0xFF == ord('q'): 
+    if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
 cap.release()
